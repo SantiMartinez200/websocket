@@ -74,18 +74,23 @@ function actualizarVista(id) {
 }
 
 
+let conn;
+try {
+    conn = new WebSocket('ws://localhost:8080'); // Dirección de tu servidor WebSocket   
+} catch (error) {
+    alert('error');
+}
 
-
-const conn = new WebSocket('ws://localhost:8080');
+conn.onerror = (error) => {
+    alert('No se pudo establecer la conexion del servicio');
+    console.error('Error en WebSocket:', error);
+};
 
 conn.onopen = () => {
     console.log('WebSocket conectado');
     conn.send('Abrir Solicitud');
 };
 
-conn.onerror = (error) => {
-    console.error('Error en WebSocket:', error);
-};
 
 conn.onmessage = (event) => {
     console.log('Mensaje recibido:', event.data);

@@ -57,12 +57,24 @@
 
         <script>
             (() => {
-                const conn = new WebSocket('ws://localhost:8080'); // Dirección de tu servidor WebSocket
+                let conn;
+                try {
+                    conn = new WebSocket('ws://localhost:8080'); // Dirección de tu servidor WebSocket   
+                } catch (error) {
+                    alert('error');
+                }
 
-                conn.onopen = () => {
-                    console.log('WebSocket conectado');
-                    conn.send('Apareció un cliente del otro lado.');
-                };
+                conn.onerror = (error) => {
+                        alert('No se pudo establecer la conexion del servicio');
+                    };
+
+
+                if(conn !== undefined){
+                    conn.onopen = () => {
+                        console.log('WebSocket conectado');
+                        conn.send('Apareció un cliente del otro lado.');
+                    };
+                }
             
                 class Message {
                     constructor(arg) {
@@ -120,41 +132,42 @@
                         handleSendMessage();
                     }
                 });
-            
-                conn.onmessage = (event) => {
-                    const inputId = document.getElementById('solicitud');
-                    const tex = inputId.value;
-                
-                    const message = JSON.parse(event.data);
-                    conn.onmessage = function(event) {
-                        try {
-                            const message = JSON.parse(event.data); // Asegúrate de que esto sea un JSON válido
-                        
-                            if (message.record_id == undefined) {
-                                console.warn('El mensaje recibido no contiene la propiedad record_id');
-                                return;
-                            }
-                        
-                            if (message.record_id != undefined && message.record_id == tex) {
-                                let responseText = '';
+                if(conn !== undefined){
+                    conn.onmessage = (event) => {
+                        const inputId = document.getElementById('solicitud');
+                        const tex = inputId.value;
+                    
+                        const message = JSON.parse(event.data);
+                        conn.onmessage = function(event) {
+                            try {
+                                const message = JSON.parse(event.data); // Asegúrate de que esto sea un JSON válido
                             
-                                if (message.action === 'ACEP') {
-                                    console.log('El registro fue aceptado');
-                                    responseText = 'Tu pedido fue aceptado.';
-                                } else if (message.action === 'RECH') {
-                                    console.log('El registro fue rechazado');
-                                    responseText = 'Tu pedido fue rechazado.';
+                                if (message.record_id == undefined) {
+                                    console.warn('El mensaje recibido no contiene la propiedad record_id');
+                                    return;
                                 }
                             
-                                if (responseText) {
-                                    sendMessage(responseText, 'right'); // Muestra el mensaje recibido del servidor
+                                if (message.record_id != undefined && message.record_id == tex) {
+                                    let responseText = '';
+                                
+                                    if (message.action === 'ACEP') {
+                                        console.log('El registro fue aceptado');
+                                        responseText = 'Tu pedido fue aceptado.';
+                                    } else if (message.action === 'RECH') {
+                                        console.log('El registro fue rechazado');
+                                        responseText = 'Tu pedido fue rechazado.';
+                                    }
+                                
+                                    if (responseText) {
+                                        sendMessage(responseText, 'right'); // Muestra el mensaje recibido del servidor
+                                    }
                                 }
+                            } catch (error) {
+                                console.error('Error al procesar el mensaje:', error);
                             }
-                        } catch (error) {
-                            console.error('Error al procesar el mensaje:', error);
-                        }
+                        };
                     };
-                };
+                }
             })();
 
 
